@@ -1,7 +1,6 @@
 package usue;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 
 public class ChessField {
     private static final String TAG = "ChessField";
@@ -13,27 +12,23 @@ public class ChessField {
     private static final char WHITE_SQUARE = '\u2b1c'; //⬜
     private static final int  WHITE_SQUARE_INDEX = -3;
 
-    private final int rowAndLine;
-    private ArrayList<ArrayList<Integer>> board = new ArrayList<>();
+    private final int lineAndRow;
+    private int[][] board;
 
-    public ChessField(int rowAndLine) {
-        this.rowAndLine = rowAndLine;
-        generateEmptyTable(rowAndLine);
+    public ChessField(int lineAndRow) {
+        this.lineAndRow = lineAndRow;
+        generateEmptyTable();
     }
 
-    private void generateEmptyTable(int rowAndLine) {
-        for (int i = 0; i < rowAndLine; i++) {
-            ArrayList<Integer> emptyLine = new ArrayList<>();
-            for (int j = 0; j < rowAndLine; j++)
-                emptyLine.add(0);
-            board.add(emptyLine);
-        }
+    private void generateEmptyTable() {
+        board = new int[lineAndRow][lineAndRow];
+//        for (int[] row : board) for (int cell : row) cell = 0;
     }
 
     public void generateRandomTable() {
-        for (int i = 0; i < rowAndLine; i++)
-            for (int j = 0; j < rowAndLine; j++)
-                board.get(i).set(j, ((new SecureRandom()).nextInt(3) + 1) * -1 );
+        for (int line = 0; line < lineAndRow; line++)
+            for (int row = 0; row < lineAndRow; row++)
+                board[line][row] = ((new SecureRandom()).nextInt(3) + 1) * -1;
     }
 
     public static void showChars() {
@@ -41,8 +36,8 @@ public class ChessField {
         System.out.println("Black square (under attack) - " + BLACK_SQUARE);
         System.out.println("White square (not under attack) - " + WHITE_SQUARE);
         System.out.println("Test random board 8x8 :");
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+        for (int line = 0; line < 8; line++) {
+            for (int row = 0; row < 8; row++) {
 
                 switch ((new SecureRandom()).nextInt(3)) {
                     case 0:
@@ -62,11 +57,15 @@ public class ChessField {
         }
     }
 
+    public void showBoardFriendly() {
+        showBoard(true);
+    }
+
     public void showBoard(boolean toChar) {
-        for (int i = 0; i < rowAndLine; i++) {
-            for (int j = 0; j < rowAndLine; j++) {
+        for (int[] line : board) {
+            for (int cell : line) {
                 if (toChar) {
-                    switch (board.get(i).get(j)) {
+                    switch (cell) {
                         case QUEEN_INDEX:
                             System.out.print(QUEEN + " ");
                             break;
@@ -83,9 +82,109 @@ public class ChessField {
                             System.out.print("E ");
                     }
                 } else
-                    System.out.print(board.get(i).get(j) + " ");
+                    System.out.print(cell + " ");
             }
             System.out.println();
+        }
+    }
+
+    private void placeQueen(Cell cell) {
+        placeQueen(cell.line, cell.row);
+    }
+
+    public void placeQueen(int line, int row) {
+        board[line][row] = QUEEN_INDEX;
+        for (int line_ = 0; line_ < lineAndRow; line_++)
+            for (int row_ = 0; row_ < lineAndRow; row_++)
+                if (board[line_][row_] != QUEEN_INDEX && (row_ == row || line_ == line || Math.abs(line_ - line) == Math.abs(row_ - row)))
+                    board[line_][row_] = BLACK_SQUARE_INDEX;
+    }
+
+    public void checkWeight() {
+        for (int line = 0; line < lineAndRow; line++) {
+            for (int row = 0; row < lineAndRow; row++) {
+                if (board[line][row] == QUEEN_INDEX || board[line][row] == BLACK_SQUARE_INDEX) continue;
+                int sum = board[line][row];
+                for (int line_ = 0; line_ < lineAndRow; line_++) {
+                    for (int row_ = 0; row_ < lineAndRow; row_++) {
+                        if (board[line_][row_] == QUEEN_INDEX || board[line_][row_] == BLACK_SQUARE_INDEX ||
+                                !(line == line_ || row == row_ || Math.abs(line_ - line) == Math.abs(row_ - row)))
+                            continue;
+                        else
+                            sum++;
+                    }
+                }
+                board[line][row] = sum;
+            }
+        }
+    }
+
+    public Cell findMaxWeight() {
+        int weight = 0;
+        Cell cell = new Cell(-1, -1);
+        for (int line = 0; line < lineAndRow; line++) {
+            for (int row = 0; row < lineAndRow; row++) {
+                if (board[line][row] > weight && board[line][row] > -1) {
+                    weight = board[line][row];
+                    cell.line = line;
+                    cell.row = row;
+                }
+            }
+        }
+        return cell;
+    }
+
+    public Cell findMaxWeight(int line) {
+        int weight = 0;
+        Cell cell = new Cell(-1, -1);
+//        for (int line = 0; line < lineAndRow; line++) {
+        for (int row = 0; row < lineAndRow; row++) {
+            if (board[line][row] > weight && board[line][row] > -1) {
+                weight = board[line][row];
+                cell.line = line;
+                cell.row = row;
+            }
+        }
+//        }
+        return cell;
+    }
+
+
+    public void doIt(Cell startPosition) {
+        for (int i = 0; i < lineAndRow; i++) {
+            placeQueen(startPosition);
+            checkWeight();
+            startPosition = findMaxWeight();
+//            try {
+//                startPosition = findMaxWeight(i + 1);
+//            } catch (ArrayIndexOutOfBoundsException e) {
+//                return;
+//            }
+            if (startPosition.line == -1 || startPosition.row == -1) {
+                System.err.println("Did not work out".toUpperCase());
+                return;
+            }
+            System.out.println();
+            showBoard(false);
+            System.out.println();
+            showBoardFriendly();
+        }
+    }
+
+    public static class Cell {
+        public int line;
+        public int row;
+        public Cell(int line, int row) {
+            this.line = line;
+            this.row = row;
+        }
+
+        @Override
+        public String toString() {
+            return "Cell{" +
+                    "line=" + line +
+                    ", row=" + row +
+                    '}';
         }
     }
 
