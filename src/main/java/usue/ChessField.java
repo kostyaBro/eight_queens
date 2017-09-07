@@ -20,9 +20,9 @@ public class ChessField {
         generateEmptyTable();
     }
 
-    private void generateEmptyTable() {
+    public void generateEmptyTable() {
         board = new int[lineAndRow][lineAndRow];
-//        for (int[] row : board) for (int cell : row) cell = 0;
+        for (int[] row : board) for (int cell : row) cell = 0;
     }
 
     public void generateRandomTable() {
@@ -150,7 +150,7 @@ public class ChessField {
     }
 
 
-    public void doIt(Cell startPosition) {
+    public boolean doIt(Cell startPosition) {
         for (int i = 0; i < lineAndRow; i++) {
             placeQueen(startPosition);
             checkWeight();
@@ -162,13 +162,14 @@ public class ChessField {
 //            }
             if (startPosition.line == -1 || startPosition.row == -1) {
                 System.err.println("Did not work out".toUpperCase());
-                return;
+                return false;
             }
             System.out.println();
             showBoard(false);
             System.out.println();
             showBoardFriendly();
         }
+        return true;
     }
 
     public static class Cell {
