@@ -107,11 +107,11 @@ public class ChessField {
                 int sum = board[line][row];
                 for (int line_ = 0; line_ < lineAndRow; line_++) {
                     for (int row_ = 0; row_ < lineAndRow; row_++) {
-                        if (board[line_][row_] == QUEEN_INDEX || board[line_][row_] == BLACK_SQUARE_INDEX ||
-                                !(line == line_ || row == row_ || Math.abs(line_ - line) == Math.abs(row_ - row)))
-                            continue;
-                        else
+                        if ((board[line_][row_] == QUEEN_INDEX || board[line_][row_] == BLACK_SQUARE_INDEX) &&
+                                (line == line_ || row == row_ || Math.abs(line_ - line) == Math.abs(row_ - row)))
                             sum++;
+//                        else
+//                            sum++;
                     }
                 }
                 board[line][row] = sum;
