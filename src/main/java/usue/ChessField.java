@@ -2,6 +2,9 @@ package usue;
 
 import java.security.SecureRandom;
 
+/**
+ * @author kostyaBro
+ */
 public class ChessField {
     private static final String TAG = "ChessField";
 
